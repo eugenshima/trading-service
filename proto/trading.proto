@@ -16,6 +16,7 @@ message Position {
 
 service PriceService {
     rpc OpenPosition(OpenPositionRequest) returns (OpenPositionResponse);
+    rpc ClosePosition(ClosePositionRequest) returns (ClosePositionResponse);
 }
 
 message OpenPositionRequest {
@@ -23,5 +24,11 @@ message OpenPositionRequest {
 }
 
 message OpenPositionResponse {
-    string ID = 2;
+    string ID = 1;
 }
+
+message ClosePositionRequest {
+    string ID = 1;
+}
+
+message ClosePositionResponse{}

@@ -10,6 +10,7 @@ import (
 	"github.com/eugenshima/trading-service/internal/repository"
 	"github.com/eugenshima/trading-service/internal/service"
 	proto "github.com/eugenshima/trading-service/proto"
+	"github.com/go-playground/validator"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
@@ -48,7 +49,7 @@ func main() {
 	}
 	rps := repository.NewTradingRepository(pool)
 	srv := service.NewTradingService(rps)
-	handler := handlers.NewTradingHandler(srv)
+	handler := handlers.NewTradingHandler(srv, validator.New())
 
 	lis, err := net.Listen("tcp", "127.0.0.1:8083")
 	if err != nil {

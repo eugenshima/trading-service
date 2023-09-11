@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PriceServiceClient interface {
 	OpenPosition(ctx context.Context, in *OpenPositionRequest, opts ...grpc.CallOption) (*OpenPositionResponse, error)
+	ClosePosition(ctx context.Context, in *ClosePositionRequest, opts ...grpc.CallOption) (*ClosePositionResponse, error)
 }
 
 type priceServiceClient struct {
@@ -42,11 +43,21 @@ func (c *priceServiceClient) OpenPosition(ctx context.Context, in *OpenPositionR
 	return out, nil
 }
 
+func (c *priceServiceClient) ClosePosition(ctx context.Context, in *ClosePositionRequest, opts ...grpc.CallOption) (*ClosePositionResponse, error) {
+	out := new(ClosePositionResponse)
+	err := c.cc.Invoke(ctx, "/PriceService/ClosePosition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PriceServiceServer is the server API for PriceService service.
 // All implementations must embed UnimplementedPriceServiceServer
 // for forward compatibility
 type PriceServiceServer interface {
 	OpenPosition(context.Context, *OpenPositionRequest) (*OpenPositionResponse, error)
+	ClosePosition(context.Context, *ClosePositionRequest) (*ClosePositionResponse, error)
 	mustEmbedUnimplementedPriceServiceServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedPriceServiceServer struct {
 
 func (UnimplementedPriceServiceServer) OpenPosition(context.Context, *OpenPositionRequest) (*OpenPositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenPosition not implemented")
+}
+func (UnimplementedPriceServiceServer) ClosePosition(context.Context, *ClosePositionRequest) (*ClosePositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClosePosition not implemented")
 }
 func (UnimplementedPriceServiceServer) mustEmbedUnimplementedPriceServiceServer() {}
 
@@ -88,6 +102,24 @@ func _PriceService_OpenPosition_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PriceService_ClosePosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClosePositionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PriceServiceServer).ClosePosition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/PriceService/ClosePosition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PriceServiceServer).ClosePosition(ctx, req.(*ClosePositionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PriceService_ServiceDesc is the grpc.ServiceDesc for PriceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var PriceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OpenPosition",
 			Handler:    _PriceService_OpenPosition_Handler,
+		},
+		{
+			MethodName: "ClosePosition",
+			Handler:    _PriceService_ClosePosition_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

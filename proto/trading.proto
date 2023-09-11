@@ -1,0 +1,27 @@
+syntax = "proto3";
+option go_package = "github.com/eugenshima/trading-service";
+
+message Share {
+    string share = 1;
+    double price = 2;
+}
+
+message Position {
+    string id = 1;
+    bool isLong = 2;
+    string share = 3;
+    double purchasePrice = 4;
+    double sellingPrice = 5;
+}
+
+service PriceService {
+    rpc OpenPosition(OpenPositionRequest) returns (OpenPositionResponse);
+}
+
+message OpenPositionRequest {
+    Position position = 1;
+}
+
+message OpenPositionResponse {
+    string ID = 2;
+}

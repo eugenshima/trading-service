@@ -18,122 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// PriceServiceClient is the client API for PriceService service.
+// TradingServiceClient is the client API for TradingService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type PriceServiceClient interface {
+type TradingServiceClient interface {
 	OpenPosition(ctx context.Context, in *OpenPositionRequest, opts ...grpc.CallOption) (*OpenPositionResponse, error)
 	ClosePosition(ctx context.Context, in *ClosePositionRequest, opts ...grpc.CallOption) (*ClosePositionResponse, error)
 }
 
-type priceServiceClient struct {
+type tradingServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewPriceServiceClient(cc grpc.ClientConnInterface) PriceServiceClient {
-	return &priceServiceClient{cc}
+func NewTradingServiceClient(cc grpc.ClientConnInterface) TradingServiceClient {
+	return &tradingServiceClient{cc}
 }
 
-func (c *priceServiceClient) OpenPosition(ctx context.Context, in *OpenPositionRequest, opts ...grpc.CallOption) (*OpenPositionResponse, error) {
+func (c *tradingServiceClient) OpenPosition(ctx context.Context, in *OpenPositionRequest, opts ...grpc.CallOption) (*OpenPositionResponse, error) {
 	out := new(OpenPositionResponse)
-	err := c.cc.Invoke(ctx, "/PriceService/OpenPosition", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/TradingService/OpenPosition", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *priceServiceClient) ClosePosition(ctx context.Context, in *ClosePositionRequest, opts ...grpc.CallOption) (*ClosePositionResponse, error) {
+func (c *tradingServiceClient) ClosePosition(ctx context.Context, in *ClosePositionRequest, opts ...grpc.CallOption) (*ClosePositionResponse, error) {
 	out := new(ClosePositionResponse)
-	err := c.cc.Invoke(ctx, "/PriceService/ClosePosition", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/TradingService/ClosePosition", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// PriceServiceServer is the server API for PriceService service.
-// All implementations must embed UnimplementedPriceServiceServer
+// TradingServiceServer is the server API for TradingService service.
+// All implementations must embed UnimplementedTradingServiceServer
 // for forward compatibility
-type PriceServiceServer interface {
+type TradingServiceServer interface {
 	OpenPosition(context.Context, *OpenPositionRequest) (*OpenPositionResponse, error)
 	ClosePosition(context.Context, *ClosePositionRequest) (*ClosePositionResponse, error)
-	mustEmbedUnimplementedPriceServiceServer()
+	mustEmbedUnimplementedTradingServiceServer()
 }
 
-// UnimplementedPriceServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedPriceServiceServer struct {
+// UnimplementedTradingServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedTradingServiceServer struct {
 }
 
-func (UnimplementedPriceServiceServer) OpenPosition(context.Context, *OpenPositionRequest) (*OpenPositionResponse, error) {
+func (UnimplementedTradingServiceServer) OpenPosition(context.Context, *OpenPositionRequest) (*OpenPositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenPosition not implemented")
 }
-func (UnimplementedPriceServiceServer) ClosePosition(context.Context, *ClosePositionRequest) (*ClosePositionResponse, error) {
+func (UnimplementedTradingServiceServer) ClosePosition(context.Context, *ClosePositionRequest) (*ClosePositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClosePosition not implemented")
 }
-func (UnimplementedPriceServiceServer) mustEmbedUnimplementedPriceServiceServer() {}
+func (UnimplementedTradingServiceServer) mustEmbedUnimplementedTradingServiceServer() {}
 
-// UnsafePriceServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to PriceServiceServer will
+// UnsafeTradingServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TradingServiceServer will
 // result in compilation errors.
-type UnsafePriceServiceServer interface {
-	mustEmbedUnimplementedPriceServiceServer()
+type UnsafeTradingServiceServer interface {
+	mustEmbedUnimplementedTradingServiceServer()
 }
 
-func RegisterPriceServiceServer(s grpc.ServiceRegistrar, srv PriceServiceServer) {
-	s.RegisterService(&PriceService_ServiceDesc, srv)
+func RegisterTradingServiceServer(s grpc.ServiceRegistrar, srv TradingServiceServer) {
+	s.RegisterService(&TradingService_ServiceDesc, srv)
 }
 
-func _PriceService_OpenPosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TradingService_OpenPosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OpenPositionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PriceServiceServer).OpenPosition(ctx, in)
+		return srv.(TradingServiceServer).OpenPosition(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/PriceService/OpenPosition",
+		FullMethod: "/TradingService/OpenPosition",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PriceServiceServer).OpenPosition(ctx, req.(*OpenPositionRequest))
+		return srv.(TradingServiceServer).OpenPosition(ctx, req.(*OpenPositionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PriceService_ClosePosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TradingService_ClosePosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ClosePositionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PriceServiceServer).ClosePosition(ctx, in)
+		return srv.(TradingServiceServer).ClosePosition(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/PriceService/ClosePosition",
+		FullMethod: "/TradingService/ClosePosition",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PriceServiceServer).ClosePosition(ctx, req.(*ClosePositionRequest))
+		return srv.(TradingServiceServer).ClosePosition(ctx, req.(*ClosePositionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// PriceService_ServiceDesc is the grpc.ServiceDesc for PriceService service.
+// TradingService_ServiceDesc is the grpc.ServiceDesc for TradingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var PriceService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "PriceService",
-	HandlerType: (*PriceServiceServer)(nil),
+var TradingService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "TradingService",
+	HandlerType: (*TradingServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "OpenPosition",
-			Handler:    _PriceService_OpenPosition_Handler,
+			Handler:    _TradingService_OpenPosition_Handler,
 		},
 		{
 			MethodName: "ClosePosition",
-			Handler:    _PriceService_ClosePosition_Handler,
+			Handler:    _TradingService_ClosePosition_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

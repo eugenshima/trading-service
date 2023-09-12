@@ -47,6 +47,19 @@ func main() {
 		logrus.WithFields(logrus.Fields{"PgxDBAddr: ": cfg.PgxDBAddr}).Errorf("NewDBPsql: %v", err)
 		return
 	}
+
+	priceServiceConn, err := grpc.Dial(":8080", grpc.WithInsecure())
+	if err != nil {
+		return
+	}
+	defer priceServiceConn.Close()
+
+	balanceConn, err := grpc.Dial(":8081", grpc.WithInsecure())
+	if err != nil {
+		return
+	}
+	defer balanceConn.Close()
+
 	rps := repository.NewTradingRepository(pool)
 	srv := service.NewTradingService(rps)
 	handler := handlers.NewTradingHandler(srv, validator.New())
@@ -57,7 +70,7 @@ func main() {
 	}
 
 	serverRegistrar := grpc.NewServer()
-	proto.RegisterPriceServiceServer(serverRegistrar, handler)
+	proto.RegisterTradingServiceServer(serverRegistrar, handler)
 	err = serverRegistrar.Serve(lis)
 	if err != nil {
 		logrus.Fatalf("cannot start server: %s", err)

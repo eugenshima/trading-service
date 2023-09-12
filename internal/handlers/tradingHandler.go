@@ -14,7 +14,7 @@ import (
 type TradingHandler struct {
 	srv TradingService
 	vl  *validator.Validate
-	proto.UnimplementedPriceServiceServer
+	proto.UnimplementedTradingServiceServer
 }
 
 func NewTradingHandler(srv TradingService, vl *validator.Validate) *TradingHandler {
@@ -24,6 +24,7 @@ func NewTradingHandler(srv TradingService, vl *validator.Validate) *TradingHandl
 type TradingService interface {
 	OpenLongPosition(context.Context, *model.Position) error
 	OpenShortPosition(context.Context, *model.Position) error
+	ClosePosition(context.Context, uuid.UUID) error
 }
 
 func (h *TradingHandler) customValidator(ctx context.Context, i interface{}) error {
@@ -54,7 +55,6 @@ func (h *TradingHandler) customValidator(ctx context.Context, i interface{}) err
 }
 
 func (h *TradingHandler) OpenPosition(ctx context.Context, req *proto.OpenPositionRequest) (*proto.OpenPositionResponse, error) {
-
 	ID, err := uuid.Parse(req.Position.Id)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ID": req.Position.Id}).Errorf("Parse: %v", err)
@@ -95,6 +95,10 @@ func (h *TradingHandler) ClosePosition(ctx context.Context, req *proto.ClosePosi
 		logrus.WithFields(logrus.Fields{"ID": req.ID}).Errorf("Parse: %v", err)
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-	fmt.Println(ID)
+	err = h.srv.ClosePosition(ctx, ID)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"ID": ID}).Errorf("ClosePosition: %v", err)
+		return nil, fmt.Errorf("ClosePosition: %w", err)
+	}
 	return &proto.ClosePositionResponse{}, nil
 }

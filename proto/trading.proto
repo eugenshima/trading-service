@@ -14,7 +14,7 @@ message Position {
     double sellingPrice = 5;
 }
 
-service PriceService {
+service TradingService {
     rpc OpenPosition(OpenPositionRequest) returns (OpenPositionResponse);
     rpc ClosePosition(ClosePositionRequest) returns (ClosePositionResponse);
 }

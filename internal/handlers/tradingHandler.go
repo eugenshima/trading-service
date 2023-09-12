@@ -1,3 +1,4 @@
+// Package handlers for the various types of events
 package handlers
 
 import (
@@ -11,16 +12,19 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// TradingHandler struct ....
 type TradingHandler struct {
 	srv TradingService
 	vl  *validator.Validate
 	proto.UnimplementedTradingServiceServer
 }
 
+// NewTradingHandler creates a new TradingHandler
 func NewTradingHandler(srv TradingService, vl *validator.Validate) *TradingHandler {
 	return &TradingHandler{srv: srv, vl: vl}
 }
 
+// TradingService interface represents the underlying TradingService
 type TradingService interface {
 	OpenPosition(context.Context, *model.Position) error
 	ClosePosition(context.Context, uuid.UUID) error

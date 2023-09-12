@@ -1,3 +1,4 @@
+// Package repository contains methods to communicate with postgres and gRPC servers
 package repository
 
 import (
@@ -12,14 +13,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// TradingRepository structure ....
 type TradingRepository struct {
 	pool *pgxpool.Pool
 }
 
+// NewTradingRepository creates a new TradingRepository
 func NewTradingRepository(pool *pgxpool.Pool) *TradingRepository {
 	return &TradingRepository{pool: pool}
 }
 
+// CreatePosition method creates a new Position
 func (repo *TradingRepository) CreatePosition(ctx context.Context, position *model.Position) error {
 	tx, err := repo.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: "repeatable read"})
 	if err != nil {
@@ -50,6 +54,7 @@ func (repo *TradingRepository) CreatePosition(ctx context.Context, position *mod
 	return nil
 }
 
+// DeletePosition method deletes a position from database
 func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID) error {
 	tx, err := repo.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: "repeatable read"})
 	if err != nil {
@@ -74,9 +79,5 @@ func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
-	return nil
-}
-
-func (repo *TradingRepository) CheckForDestination(ctx context.Context, ID uuid.UUID, destinationPrice, takeProfit, stopLoss float64) error {
 	return nil
 }

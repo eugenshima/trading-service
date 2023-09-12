@@ -1,3 +1,4 @@
+// Package model provides data Structures
 package model
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Position struct represents an position by user
 type Position struct {
 	ID            uuid.UUID `json:"id"`
 	ProfileID     uuid.UUID `json:"profile_id"`

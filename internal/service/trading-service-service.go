@@ -1,3 +1,4 @@
+// Package service contains business-logic methods
 package service
 
 import (
@@ -31,7 +32,7 @@ type TradingRepository interface {
 	DeletePosition(context.Context, uuid.UUID) error
 }
 
-// TradingServiceRepository interface represents a price-service-repository methods
+// PriceServiceRepository interface represents a price-service-repository methods
 type PriceServiceRepository interface {
 	AddSubscriber(context.Context, []string) error
 }
@@ -62,6 +63,7 @@ func (s *TradingService) OpenPosition(ctx context.Context, position *model.Posit
 	return s.rps.CreatePosition(ctx, position)
 }
 
+// ClosePosition method closes the position of given ID
 func (s *TradingService) ClosePosition(ctx context.Context, ID uuid.UUID) error {
 	return s.rps.DeletePosition(ctx, ID)
 }

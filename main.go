@@ -1,3 +1,4 @@
+// Package main is the entry-point for the package
 package main
 
 import (
@@ -22,13 +23,13 @@ import (
 // NewDBPsql function provides Connection with PostgreSQL database
 func NewDBPsql(env string) (*pgxpool.Pool, error) {
 	// Initialization a connect configuration for a PostgreSQL using pgx driver
-	config, err := pgxpool.ParseConfig(env)
+	cfg, err := pgxpool.ParseConfig(env)
 	if err != nil {
 		return nil, fmt.Errorf("error connection to PostgreSQL: %v", err)
 	}
 
 	// Establishing a new connection to a PostgreSQL database using the pgx driver
-	pool, err := pgxpool.ConnectConfig(context.Background(), config)
+	pool, err := pgxpool.ConnectConfig(context.Background(), cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error connection to PostgreSQL: %v", err)
 	}
@@ -38,6 +39,7 @@ func NewDBPsql(env string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
+// nolint:staticcheck // noinspection
 func main() {
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -54,13 +56,23 @@ func main() {
 	if err != nil {
 		return
 	}
-	defer priceServiceConn.Close()
+	defer func() {
+		err = priceServiceConn.Close()
+		if err != nil {
+			fmt.Println("error closing price service connection")
+		}
+	}()
 
 	balanceConn, err := grpc.Dial(":8081", grpc.WithInsecure())
 	if err != nil {
 		return
 	}
-	defer balanceConn.Close()
+	defer func() {
+		err = balanceConn.Close()
+		if err != nil {
+			fmt.Println("error closing balance connection")
+		}
+	}()
 
 	priceServiceClient := priceServiceProto.NewPriceServiceClient(priceServiceConn)
 	balanceServiceClient := balanceServiceProto.NewBalanceServiceClient(balanceConn)

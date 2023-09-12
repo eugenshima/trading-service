@@ -1,3 +1,4 @@
+// Package repository contains methods to communicate with postgres and gRPC servers
 package repository
 
 import (
@@ -9,14 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// BalanceRepository represents a repository that contains balance microservice methods
 type BalanceRepository struct {
 	client proto.BalanceServiceClient
 }
 
+// NewBalanceRepository creates a new BalanceRepository
 func NewBalanceRepository(client proto.BalanceServiceClient) *BalanceRepository {
 	return &BalanceRepository{client: client}
 }
 
+// GetBalance method returns a balance by given ID
 func (r *BalanceRepository) GetBalance(ctx context.Context, ID uuid.UUID) (*model.Balance, error) {
 	response, err := r.client.GetUserByID(ctx, &proto.UserGetByIDRequest{ProfileID: ID.String()})
 	if err != nil {
@@ -33,8 +37,7 @@ func (r *BalanceRepository) GetBalance(ctx context.Context, ID uuid.UUID) (*mode
 	return balance, nil
 }
 
-func (r *BalanceRepository) UpdateBalance(ctx context.Context, ID uuid.UUID) error {
-
-	//response, err := r.client.UpdateUserBalance(ctx, &proto.UserUpdateRequest{})
+// UpdateBalance ....
+func (r *BalanceRepository) UpdateBalance(_ context.Context, _ uuid.UUID) error {
 	return nil
 }

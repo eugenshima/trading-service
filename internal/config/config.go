@@ -1,3 +1,4 @@
+// Package config contains configuration information
 package config
 
 import "github.com/caarlos0/env"

@@ -40,7 +40,10 @@ func (repo *TradingRepository) CreatePosition(ctx context.Context, position *mod
 			}
 		}
 	}()
-	_, err = tx.Exec(ctx, "INSERT INTO trading.trading VALUES($1,$2,$3,$4,$5)", position.ID, position.IsLong, position.Share, position.PurchasePrice, position.SellingPrice)
+	_, err = tx.Exec(
+		ctx,
+		"INSERT INTO trading.trading VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+		position.ID, position.ProfileID, position.IsLong, position.Share, position.PurchasePrice, position.SellingPrice, position.StopLoss, position.TakeProfit)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
@@ -71,5 +74,9 @@ func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
+	return nil
+}
+
+func (repo *TradingRepository) CheckForDestination(ctx context.Context, ID uuid.UUID, destinationPrice, takeProfit, stopLoss float64) error {
 	return nil
 }

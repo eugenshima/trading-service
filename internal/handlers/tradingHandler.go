@@ -22,11 +22,11 @@ func NewTradingHandler(srv TradingService, vl *validator.Validate) *TradingHandl
 }
 
 type TradingService interface {
-	OpenLongPosition(context.Context, *model.Position) error
-	OpenShortPosition(context.Context, *model.Position) error
+	OpenPosition(context.Context, *model.Position) error
 	ClosePosition(context.Context, uuid.UUID) error
 }
 
+// customValidator function for validation of requests
 func (h *TradingHandler) customValidator(ctx context.Context, i interface{}) error {
 	if val, ok := i.(*model.Position); ok {
 		err := h.vl.VarCtx(ctx, val.ID, "required")
@@ -54,6 +54,7 @@ func (h *TradingHandler) customValidator(ctx context.Context, i interface{}) err
 	return nil
 }
 
+// OpenPosition function opens position for user
 func (h *TradingHandler) OpenPosition(ctx context.Context, req *proto.OpenPositionRequest) (*proto.OpenPositionResponse, error) {
 	ID, err := uuid.Parse(req.Position.Id)
 	if err != nil {
@@ -61,34 +62,30 @@ func (h *TradingHandler) OpenPosition(ctx context.Context, req *proto.OpenPositi
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 	position := &model.Position{
-		ID:            ID,
+		ID:            uuid.New(),
+		ProfileID:     ID,
 		IsLong:        req.Position.IsLong,
 		Share:         req.Position.Share,
 		PurchasePrice: req.Position.PurchasePrice,
 		SellingPrice:  req.Position.SellingPrice,
+		StopLoss:      req.Position.StopLoss,
+		TakeProfit:    req.Position.TakeProfit,
 	}
 	err = h.customValidator(ctx, position)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"position": position}).Errorf("customValidator: %v", err)
 		return nil, fmt.Errorf("customValidator: %w", err)
 	}
-	if position.IsLong {
-		err := h.srv.OpenLongPosition(ctx, position)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"position": position}).Errorf("OpenLongPosition: %v", err)
-			return nil, fmt.Errorf("OpenLongPosition: %w", err)
-		}
-	} else {
-		err := h.srv.OpenShortPosition(ctx, position)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"position": position}).Errorf("OpenShortPosition: %v", err)
-			return nil, fmt.Errorf("OpenShortPosition: %w", err)
-		}
+	err = h.srv.OpenPosition(ctx, position)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"position": position}).Errorf("OpenPosition: %v", err)
+		return nil, fmt.Errorf("OpenPosition: %w", err)
 	}
 
 	return &proto.OpenPositionResponse{ID: ID.String()}, nil
 }
 
+// ClosePosition function closes position for user
 func (h *TradingHandler) ClosePosition(ctx context.Context, req *proto.ClosePositionRequest) (*proto.ClosePositionResponse, error) {
 	ID, err := uuid.Parse(req.ID)
 	if err != nil {

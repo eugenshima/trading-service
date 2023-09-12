@@ -8,9 +8,26 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v4 v4.18.1
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0
+)
+
+require (
+	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
+	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/containerd/continuity v0.4.2 // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-units v0.5.0 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/opencontainers/runc v1.1.9 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/tools v0.12.0 // indirect
 )
 
 require (

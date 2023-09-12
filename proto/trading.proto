@@ -12,6 +12,8 @@ message Position {
     string share = 3;
     double purchasePrice = 4;
     double sellingPrice = 5;
+    double stopLoss = 6;
+    double takeProfit = 7;
 }
 
 service TradingService {

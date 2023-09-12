@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"net"
 
+	balanceServiceProto "github.com/eugenshima/balance/proto"
+	priceServiceProto "github.com/eugenshima/price-service/proto"
 	"github.com/eugenshima/trading-service/internal/config"
 	"github.com/eugenshima/trading-service/internal/handlers"
 	"github.com/eugenshima/trading-service/internal/repository"
 	"github.com/eugenshima/trading-service/internal/service"
-	proto "github.com/eugenshima/trading-service/proto"
-	"github.com/go-playground/validator"
+	readingServiceProto "github.com/eugenshima/trading-service/proto"
 
+	"github.com/go-playground/validator"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -60,8 +62,13 @@ func main() {
 	}
 	defer balanceConn.Close()
 
+	priceServiceClient := priceServiceProto.NewPriceServiceClient(priceServiceConn)
+	balanceServiceClient := balanceServiceProto.NewBalanceServiceClient(balanceConn)
+
 	rps := repository.NewTradingRepository(pool)
-	srv := service.NewTradingService(rps)
+	priceServiceRps := repository.NewPriceServiceClient(priceServiceClient)
+	balanceServiceRps := repository.NewBalanceRepository(balanceServiceClient)
+	srv := service.NewTradingService(rps, priceServiceRps, balanceServiceRps)
 	handler := handlers.NewTradingHandler(srv, validator.New())
 
 	lis, err := net.Listen("tcp", "127.0.0.1:8083")
@@ -70,7 +77,7 @@ func main() {
 	}
 
 	serverRegistrar := grpc.NewServer()
-	proto.RegisterTradingServiceServer(serverRegistrar, handler)
+	readingServiceProto.RegisterTradingServiceServer(serverRegistrar, handler)
 	err = serverRegistrar.Serve(lis)
 	if err != nil {
 		logrus.Fatalf("cannot start server: %s", err)

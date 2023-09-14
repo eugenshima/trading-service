@@ -9,11 +9,12 @@ message Share {
 message Position {
     string id = 1;
     bool isLong = 2;
-    string share = 3;
-    double purchasePrice = 4;
-    double sellingPrice = 5;
-    double stopLoss = 6;
-    double takeProfit = 7;
+    string shareName = 3;
+    double sharePrice = 4;
+    double total = 5;
+    double shareAmount = 6;
+    double stopLoss = 7;
+    double takeProfit = 8;
 }
 
 service TradingService {

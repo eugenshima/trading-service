@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/ory/dockertest v3.3.5+incompatible
+	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.58.0
 	google.golang.org/protobuf v1.31.0

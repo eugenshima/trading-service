@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	proto "github.com/eugenshima/price-service/proto"
+	"github.com/eugenshima/trading-service/internal/model"
 )
 
 // PriceServiceClient struct ....
@@ -19,15 +20,20 @@ func NewPriceServiceClient(client proto.PriceServiceClient) *PriceServiceClient 
 }
 
 // AddSubscriber method adds a subscriber to the list of subscribers
-func (c *PriceServiceClient) AddSubscriber(ctx context.Context, selectedShares []string) error {
+func (c *PriceServiceClient) AddSubscriber(ctx context.Context, selectedShares []string) (*model.Share, error) {
 	stream, err := c.client.Subscribe(ctx, &proto.SubscribeRequest{ShareName: selectedShares})
 	if err != nil {
-		return fmt.Errorf("subscribe: %w", err)
+		return nil, fmt.Errorf("subscribe: %w", err)
 	}
 	shares, err := stream.Recv()
 	if err != nil {
-		return fmt.Errorf("recv: %w", err)
+		return nil, fmt.Errorf("recv: %w", err)
 	}
-	fmt.Println(shares.ID, shares.Shares[0].ShareName, shares.Shares[0].SharePrice)
-	return nil
+
+	share := &model.Share{
+		ShareName:  shares.Shares[0].ShareName,
+		SharePrice: shares.Shares[0].SharePrice,
+	}
+
+	return share, nil
 }

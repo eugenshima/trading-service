@@ -37,15 +37,7 @@ func (h *TradingHandler) customValidator(ctx context.Context, i interface{}) err
 		if err != nil {
 			return fmt.Errorf("VarCtx: %w", err)
 		}
-		err = h.vl.VarCtx(ctx, val.PurchasePrice, "required")
-		if err != nil {
-			return fmt.Errorf("VarCtx: %w", err)
-		}
-		err = h.vl.VarCtx(ctx, val.SellingPrice, "required")
-		if err != nil {
-			return fmt.Errorf("VarCtx: %w", err)
-		}
-		err = h.vl.VarCtx(ctx, val.Share, "required")
+		err = h.vl.VarCtx(ctx, val.ShareName, "required")
 		if err != nil {
 			return fmt.Errorf("VarCtx: %w", err)
 		}
@@ -66,14 +58,14 @@ func (h *TradingHandler) OpenPosition(ctx context.Context, req *proto.OpenPositi
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 	position := &model.Position{
-		ID:            uuid.New(),
-		ProfileID:     ID,
-		IsLong:        req.Position.IsLong,
-		Share:         req.Position.Share,
-		PurchasePrice: req.Position.PurchasePrice,
-		SellingPrice:  req.Position.SellingPrice,
-		StopLoss:      req.Position.StopLoss,
-		TakeProfit:    req.Position.TakeProfit,
+		ID:          uuid.New(),
+		ProfileID:   ID,
+		IsLong:      req.Position.IsLong,
+		ShareName:   req.Position.ShareName,
+		Total:       req.Position.Total,
+		ShareAmount: req.Position.ShareAmount,
+		StopLoss:    req.Position.StopLoss,
+		TakeProfit:  req.Position.TakeProfit,
 	}
 	err = h.customValidator(ctx, position)
 	if err != nil {

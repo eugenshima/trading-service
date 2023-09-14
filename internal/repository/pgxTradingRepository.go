@@ -75,7 +75,7 @@ func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID)
 			}
 		}
 	}()
-	_, err = tx.Exec(ctx, "DELETE FROM trading.trading WHERE id=$1", ID)
+	_, err = tx.Exec(ctx, "DELETE FROM trading.trading WHERE profile_id=$1", ID)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
@@ -104,7 +104,7 @@ func (repo *TradingRepository) GetPositionByID(ctx context.Context, ID uuid.UUID
 		}
 	}()
 	position := &model.Position{}
-	err = tx.QueryRow(ctx, "SELECT id, profile_id, is_long, share_name, share_price, total, shares_amount, stop_loss, take_profit FROM trading.trading WHERE id=$1", ID).Scan(&position.ID, &position.ProfileID, &position.IsLong, &position.ShareName, &position.SharePrice, &position.Total, &position.ShareAmount, &position.StopLoss, &position.TakeProfit)
+	err = tx.QueryRow(ctx, "SELECT id, profile_id, is_long, share_name, share_price, total, shares_amount, stop_loss, take_profit FROM trading.trading WHERE profile_id=$1", ID).Scan(&position.ID, &position.ProfileID, &position.IsLong, &position.ShareName, &position.SharePrice, &position.Total, &position.ShareAmount, &position.StopLoss, &position.TakeProfit)
 	if err != nil {
 		return nil, fmt.Errorf("QueryRow: %w", err)
 	}

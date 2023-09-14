@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Position struct represents an position by user
+// Position struct represents an user's position
 type Position struct {
 	ID          uuid.UUID `json:"id"`
 	ProfileID   uuid.UUID `json:"profile_id"`
@@ -20,15 +20,23 @@ type Position struct {
 	TakeProfit  float64   `json:"take_profit"`
 }
 
+// Share struct represents one share
 type Share struct {
 	ShareName  string  `json:"share_name"`
 	SharePrice float64 `json:"share_price"`
 }
 
 // PubSub struct represents a model for subscriptions(subscriber part)
-type PubSub struct {
-	Mu   sync.RWMutex
-	Subs map[uuid.UUID][]string
-	// SubsShares map[uuid.UUID]chan []*Share
-	Closed map[uuid.UUID]bool
+type PositionManager struct {
+	Mu              sync.RWMutex
+	OpenedPositions map[uuid.UUID]chan *Position
+	Closed          map[uuid.UUID]bool
+}
+
+// NewPositionManager creates a new position manager
+func NewPositionManager() *PositionManager {
+	return &PositionManager{
+		OpenedPositions: make(map[uuid.UUID]chan *Position),
+		Closed:          make(map[uuid.UUID]bool),
+	}
 }

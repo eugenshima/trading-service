@@ -10,6 +10,7 @@ import (
 	priceServiceProto "github.com/eugenshima/price-service/proto"
 	"github.com/eugenshima/trading-service/internal/config"
 	"github.com/eugenshima/trading-service/internal/handlers"
+	"github.com/eugenshima/trading-service/internal/model"
 	"github.com/eugenshima/trading-service/internal/repository"
 	"github.com/eugenshima/trading-service/internal/service"
 	readingServiceProto "github.com/eugenshima/trading-service/proto"
@@ -80,10 +81,15 @@ func main() {
 	rps := repository.NewTradingRepository(pool)
 	priceServiceRps := repository.NewPriceServiceClient(priceServiceClient)
 	balanceServiceRps := repository.NewBalanceRepository(balanceServiceClient)
-	srv := service.NewTradingService(rps, priceServiceRps, balanceServiceRps)
+
+	positionManager := model.NewPositionManager()
+
+	srv := service.NewTradingService(rps, priceServiceRps, balanceServiceRps, positionManager)
 	handler := handlers.NewTradingHandler(srv, validator.New())
 
-	lis, err := net.Listen("tcp", "127.0.0.1:8083")
+	// go srv.CheckForTakeProfitAndStopLoss(context.TODO())
+
+	lis, err := net.Listen("tcp", cfg.TradingServiceAddress)
 	if err != nil {
 		logrus.Fatalf("cannot create listener: %s", err)
 	}

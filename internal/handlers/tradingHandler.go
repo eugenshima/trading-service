@@ -27,7 +27,7 @@ func NewTradingHandler(srv TradingService, vl *validator.Validate) *TradingHandl
 // TradingService interface represents the underlying TradingService
 type TradingService interface {
 	OpenPosition(context.Context, *model.Position) error
-	ClosePosition(context.Context, uuid.UUID) error
+	ClosePosition(context.Context, uuid.UUID) (float64, error)
 }
 
 // customValidator function for validation of requests
@@ -88,10 +88,10 @@ func (h *TradingHandler) ClosePosition(ctx context.Context, req *proto.ClosePosi
 		logrus.WithFields(logrus.Fields{"ID": req.ID}).Errorf("Parse: %v", err)
 		return nil, fmt.Errorf("parse: %w", err)
 	}
-	err = h.srv.ClosePosition(ctx, ID)
+	profitAndLoss, err := h.srv.ClosePosition(ctx, ID)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ID": ID}).Errorf("ClosePosition: %v", err)
 		return nil, fmt.Errorf("ClosePosition: %w", err)
 	}
-	return &proto.ClosePositionResponse{}, nil
+	return &proto.ClosePositionResponse{PnL: profitAndLoss}, nil
 }

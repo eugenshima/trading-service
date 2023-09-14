@@ -37,7 +37,15 @@ func (r *BalanceRepository) GetBalance(ctx context.Context, ID uuid.UUID) (*mode
 	return balance, nil
 }
 
-// UpdateBalance ....
-func (r *BalanceRepository) UpdateBalance(_ context.Context, _ uuid.UUID) error {
+// UpdateBalance method updates a balance of given ID
+func (r *BalanceRepository) UpdateBalance(ctx context.Context, balance *model.Balance) error {
+	protoBalance := &proto.Balance{
+		ProfileID: balance.ProfileID.String(),
+		Balance:   balance.Balance,
+	}
+	_, err := r.client.UpdateUserBalance(ctx, &proto.UserUpdateRequest{Balance: protoBalance})
+	if err != nil {
+		return fmt.Errorf("UpdateUserBalance: %w", err)
+	}
 	return nil
 }

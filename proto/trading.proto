@@ -34,4 +34,6 @@ message ClosePositionRequest {
     string ID = 1;
 }
 
-message ClosePositionResponse{}
+message ClosePositionResponse{
+    double PnL = 1;
+}

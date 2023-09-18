@@ -73,12 +73,12 @@ func (s *TradingService) addPositionToMap(ProfileID uuid.UUID, position *model.P
 func (s *TradingService) deletePositionFromMap(ProfileID, positionID uuid.UUID) error {
 	s.positionManager.Mu.Lock()
 	defer s.positionManager.Mu.Unlock()
-	if _, ok := s.positionManager.OpenedPositions[ProfileID]; !ok {
+	if _, ok := s.positionManager.OpenedPositions[ProfileID]; ok {
 		delete(s.positionManager.Closed, positionID)
 		delete(s.positionManager.OpenedPositions[ProfileID], positionID)
 		return nil
 	}
-	return fmt.Errorf("error closing position on ID: %v", ProfileID)
+	return fmt.Errorf("error closing position on ID: %v", positionID)
 }
 
 // OpenPosition creates a position for a given ID with checking all the necessary conditions
@@ -107,7 +107,7 @@ func (s *TradingService) OpenPosition(ctx context.Context, position *model.Posit
 	position.ShareAmount = shareAmount
 	position.SharePrice = share.SharePrice
 
-	err = s.addPositionToMap(position.ID, position)
+	err = s.addPositionToMap(position.ProfileID, position)
 	if err != nil {
 		return fmt.Errorf("addPositionToMap: %w", err)
 	}
@@ -131,7 +131,10 @@ func (s *TradingService) ClosePosition(ctx context.Context, PositionID uuid.UUID
 	if err != nil {
 		return 0, fmt.Errorf("GetPositionByID: %w", err)
 	}
-	err = s.deletePositionFromMap(position.ProfileID, PositionID)
+	for _, value := range s.positionManager.OpenedPositions[position.ProfileID] {
+		fmt.Println(value)
+	}
+	err = s.deletePositionFromMap(position.ProfileID, position.ID)
 	if err != nil {
 		return 0, fmt.Errorf("deletePositionFromMap:%w", err)
 	}
@@ -174,23 +177,26 @@ func (s *TradingService) CheckForShareClosePrice(ctx context.Context) {
 			return
 		default:
 			s.positionManager.Mu.RLock()
-			for PositionID, OpenedPosition := range s.positionManager.OpenedPositions {
-				if !s.positionManager.Closed[PositionID] {
-					continue
+			for _, OpenedPositionsMap := range s.positionManager.OpenedPositions {
+				for PositionID, OpenedPosition := range OpenedPositionsMap {
+					if !s.positionManager.Closed[PositionID] {
+						continue
+					}
+					position, err := s.rps.GetPositionByID(ctx, PositionID)
+					if err != nil {
+						logrus.Errorf("Error getting position: %v", err)
+					}
+					share, err := s.priceServiceRps.AddSubscriber(ctx, []string{position.ShareName})
+					if err != nil {
+						logrus.Errorf("Error getting share: %v", err)
+					}
+					fmt.Println(
+						"Position id -> ", PositionID,
+						"ShareOpenPrice -> ", OpenedPosition.ShareOpenPrice,
+						"CurrentSharePrice -> ", share.SharePrice,
+						"ShareClosePrice -> ", OpenedPosition.ShareClosePrice)
 				}
-				position, err := s.rps.GetPositionByID(ctx, PositionID)
-				if err != nil {
-					logrus.Errorf("Error getting position: %v", err)
-				}
-				share, err := s.priceServiceRps.AddSubscriber(ctx, []string{position.ShareName})
-				if err != nil {
-					logrus.Errorf("Error getting share: %v", err)
-				}
-				fmt.Println(
-					"Position id -> ", PositionID,
-					"ShareOpenPrice -> ", OpenedPosition[PositionID].ShareOpenPrice,
-					"CurrentSharePrice -> ", share.SharePrice,
-					"ShareClosePrice -> ", OpenedPosition[PositionID].ShareClosePrice)
+
 			}
 			s.positionManager.Mu.RUnlock()
 		}

@@ -9,7 +9,6 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v4 v4.18.1
-	github.com/lib/pq v1.10.9
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.9.3

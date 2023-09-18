@@ -157,7 +157,7 @@ func (s *TradingService) ClosePosition(ctx context.Context, PositionID uuid.UUID
 	if err != nil {
 		return 0, fmt.Errorf("UpdateBalance:%w", err)
 	}
-	err = s.rps.DeletePosition(ctx, position.ProfileID)
+	err = s.rps.DeletePosition(ctx, PositionID)
 	if err != nil {
 		return 0, fmt.Errorf("DeletePosition:%w", err)
 	}
@@ -173,8 +173,8 @@ func (s *TradingService) CheckForShareClosePrice(ctx context.Context) {
 			logrus.Info("stream ended (ctx done)")
 			return
 		default:
+			s.positionManager.Mu.RLock()
 			for PositionID, OpenedPosition := range s.positionManager.OpenedPositions {
-				s.positionManager.Mu.RLock()
 				if !s.positionManager.Closed[PositionID] {
 					continue
 				}
@@ -186,9 +186,13 @@ func (s *TradingService) CheckForShareClosePrice(ctx context.Context) {
 				if err != nil {
 					logrus.Errorf("Error getting share: %v", err)
 				}
-				fmt.Println("Position id -> ", PositionID, "ShareOpenPrice -> ", OpenedPosition[PositionID].ShareOpenPrice, "CurrentSharePrice -> ", share.SharePrice, "ShareClosePrice -> ", OpenedPosition[PositionID].ShareClosePrice)
-				s.positionManager.Mu.RUnlock()
+				fmt.Println(
+					"Position id -> ", PositionID,
+					"ShareOpenPrice -> ", OpenedPosition[PositionID].ShareOpenPrice,
+					"CurrentSharePrice -> ", share.SharePrice,
+					"ShareClosePrice -> ", OpenedPosition[PositionID].ShareClosePrice)
 			}
+			s.positionManager.Mu.RUnlock()
 		}
 	}
 }
@@ -216,7 +220,6 @@ func (s *TradingService) PublishToAllOpenedPositions(ctx context.Context) {
 				s.positionManager.Mu.Unlock()
 			}
 		}
-
 	}
 }
 

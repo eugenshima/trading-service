@@ -75,7 +75,7 @@ func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID)
 			}
 		}
 	}()
-	_, err = tx.Exec(ctx, "DELETE FROM trading.trading WHERE profile_id=$1", ID)
+	_, err = tx.Exec(ctx, "DELETE FROM trading.trading WHERE id=$1", ID)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}

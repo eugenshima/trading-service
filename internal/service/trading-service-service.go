@@ -4,7 +4,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/eugenshima/trading-service/internal/model"
 	"github.com/sirupsen/logrus"
@@ -51,35 +50,39 @@ type BalanceRepository interface {
 }
 
 // addPositionToMap method adds a position to position manager
-func (s *TradingService) addPositionToMap(ID uuid.UUID) error {
+func (s *TradingService) addPositionToMap(ProfileID uuid.UUID, position *model.Position) error {
 	s.positionManager.Mu.Lock()
 	defer s.positionManager.Mu.Unlock()
-	if _, ok := s.positionManager.OpenedPositions[ID]; !ok {
-		s.positionManager.OpenedPositions[ID] = make(chan *model.Position, 1)
+
+	s.positionManager.OpenedPositions[ProfileID] = make(map[uuid.UUID]*model.OpenedPosition)
+	openedPosition := &model.OpenedPosition{
+		PositionID:      position.ID,
+		ShareOpenPrice:  position.SharePrice,
+		ShareClosePrice: position.StopLoss,
+		ShareAmount:     position.ShareAmount,
+		IsOpened:        true,
+	}
+	if _, ok := s.positionManager.OpenedPositions[ProfileID][position.ID]; !ok {
+		s.positionManager.OpenedPositions[ProfileID][position.ID] = openedPosition
 		return nil
 	}
-	return fmt.Errorf("error opening position on ID: %v", ID)
+	return fmt.Errorf("error opening position on ID: %v", ProfileID)
 }
 
 // deletePositionFromMap method deletes a position from position manager
-func (s *TradingService) deletePositionFromMap(ID uuid.UUID) error {
+func (s *TradingService) deletePositionFromMap(ProfileID, positionID uuid.UUID) error {
 	s.positionManager.Mu.Lock()
 	defer s.positionManager.Mu.Unlock()
-	if _, ok := s.positionManager.OpenedPositions[ID]; !ok {
-		delete(s.positionManager.Closed, ID)
-		close(s.positionManager.OpenedPositions[ID])
+	if _, ok := s.positionManager.OpenedPositions[ProfileID]; !ok {
+		delete(s.positionManager.Closed, positionID)
+		delete(s.positionManager.OpenedPositions[ProfileID], positionID)
 		return nil
 	}
-	return fmt.Errorf("error closing position on ID: %v", ID)
+	return fmt.Errorf("error closing position on ID: %v", ProfileID)
 }
 
 // OpenPosition creates a position for a given ID with checking all the necessary conditions
 func (s *TradingService) OpenPosition(ctx context.Context, position *model.Position) error {
-	err := s.addPositionToMap(position.ID)
-	if err != nil {
-		return fmt.Errorf("addPositionToMap: %w", err)
-	}
-
 	balance, err := s.balanceRps.GetBalance(ctx, position.ProfileID)
 	if err != nil {
 		return fmt.Errorf("GetBalance: %w", err)
@@ -90,8 +93,7 @@ func (s *TradingService) OpenPosition(ctx context.Context, position *model.Posit
 		return fmt.Errorf("not enough money on you balance: %w", err)
 	}
 
-	selectedShares := []string{}
-	selectedShares = append(selectedShares, position.ShareName)
+	selectedShares := []string{position.ShareName}
 	share, err := s.priceServiceRps.AddSubscriber(ctx, selectedShares)
 	if err != nil {
 		return fmt.Errorf("AddSubscriber:%w", err)
@@ -104,6 +106,11 @@ func (s *TradingService) OpenPosition(ctx context.Context, position *model.Posit
 
 	position.ShareAmount = shareAmount
 	position.SharePrice = share.SharePrice
+
+	err = s.addPositionToMap(position.ID, position)
+	if err != nil {
+		return fmt.Errorf("addPositionToMap: %w", err)
+	}
 
 	err = s.rps.CreatePosition(ctx, position)
 	if err != nil {
@@ -119,14 +126,18 @@ func (s *TradingService) OpenPosition(ctx context.Context, position *model.Posit
 }
 
 // ClosePosition method closes the position of given ID
-func (s *TradingService) ClosePosition(ctx context.Context, ID uuid.UUID) (float64, error) {
-	balance, err := s.balanceRps.GetBalance(ctx, ID)
-	if err != nil {
-		return 0, fmt.Errorf("GetBalance: %w", err)
-	}
-	position, err := s.rps.GetPositionByID(ctx, ID)
+func (s *TradingService) ClosePosition(ctx context.Context, PositionID uuid.UUID) (float64, error) {
+	position, err := s.rps.GetPositionByID(ctx, PositionID)
 	if err != nil {
 		return 0, fmt.Errorf("GetPositionByID: %w", err)
+	}
+	err = s.deletePositionFromMap(position.ProfileID, PositionID)
+	if err != nil {
+		return 0, fmt.Errorf("deletePositionFromMap:%w", err)
+	}
+	balance, err := s.balanceRps.GetBalance(ctx, position.ProfileID)
+	if err != nil {
+		return 0, fmt.Errorf("GetBalance: %w", err)
 	}
 	share, err := s.priceServiceRps.AddSubscriber(ctx, []string{position.ShareName})
 	if err != nil {
@@ -138,46 +149,103 @@ func (s *TradingService) ClosePosition(ctx context.Context, ID uuid.UUID) (float
 		return 0, fmt.Errorf("calculateProfitAndLoss:%w", err)
 	}
 	updatedBalance := &model.Balance{
-		ProfileID: ID,
+		BalanceID: balance.BalanceID,
+		ProfileID: position.ProfileID,
 		Balance:   currentTotal,
 	}
 	err = s.balanceRps.UpdateBalance(ctx, updatedBalance)
 	if err != nil {
 		return 0, fmt.Errorf("UpdateBalance:%w", err)
 	}
-	err = s.rps.DeletePosition(ctx, ID)
+	err = s.rps.DeletePosition(ctx, position.ProfileID)
 	if err != nil {
 		return 0, fmt.Errorf("DeletePosition:%w", err)
 	}
+
 	return PnL, nil
 }
 
 // CheckForDestinationAmount function checks for given price of share in goven position
-func (s *TradingService) CheckForDestinationAmount(ctx context.Context, ID uuid.UUID) {
+func (s *TradingService) CheckForShareClosePrice(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Info("stream ended (ctx done)")
+			return
+		default:
+			for PositionID, OpenedPosition := range s.positionManager.OpenedPositions {
+				s.positionManager.Mu.RLock()
+				if !s.positionManager.Closed[PositionID] {
+					continue
+				}
+				position, err := s.rps.GetPositionByID(ctx, PositionID)
+				if err != nil {
+					logrus.Errorf("Error getting position: %v", err)
+				}
+				share, err := s.priceServiceRps.AddSubscriber(ctx, []string{position.ShareName})
+				if err != nil {
+					logrus.Errorf("Error getting share: %v", err)
+				}
+				fmt.Println("Position id -> ", PositionID, "ShareOpenPrice -> ", OpenedPosition[PositionID].ShareOpenPrice, "CurrentSharePrice -> ", share.SharePrice, "ShareClosePrice -> ", OpenedPosition[PositionID].ShareClosePrice)
+				s.positionManager.Mu.RUnlock()
+			}
+		}
+	}
+}
 
+// PublishToAllOpenedPositions
+func (s *TradingService) PublishToAllOpenedPositions(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Info("stream ended (ctx done)")
+		default:
+			for PositionID, OpenedPosition := range s.positionManager.OpenedPositions {
+				s.positionManager.Mu.Lock()
+				position, err := s.rps.GetPositionByID(ctx, PositionID)
+				if err != nil {
+					logrus.Errorf("Error getting position: %v", err)
+					return
+				}
+				share, err := s.priceServiceRps.AddSubscriber(ctx, []string{position.ShareName})
+				if err != nil {
+					logrus.Errorf("Error getting share: %v", err)
+					return
+				}
+				fmt.Println("Position id -> ", PositionID, "ShareOpenPrice -> ", OpenedPosition[PositionID].ShareOpenPrice, "CurrentSharePrice -> ", share.SharePrice, "ShareClosePrice -> ", OpenedPosition[PositionID].ShareClosePrice)
+				s.positionManager.Mu.Unlock()
+			}
+		}
+
+	}
 }
 
 // CheckForTakeProfitAndStopLoss function checks if price reaches given stop loss or take profit
 func (s *TradingService) CheckForTakeProfitAndStopLoss(ctx context.Context) {
 	for {
-		time.Sleep(1 * time.Second)
-		s.positionManager.Mu.Lock()
-		for ID, _ := range s.positionManager.OpenedPositions {
+
+		s.positionManager.Mu.RLock()
+		for ID, openedPosition := range s.positionManager.OpenedPositions {
 			select {
 			case <-ctx.Done():
 				logrus.Info("stream ended (ctx done)")
 				return
 			default:
-				logrus.Info()
 				position, err := s.rps.GetPositionByID(ctx, ID)
 				if err != nil {
 					return
 				}
-				s.positionManager.OpenedPositions[ID] <- position
+				fmt.Println(position, openedPosition)
+
 			}
 		}
-		s.positionManager.Mu.Unlock()
+		s.positionManager.Mu.RUnlock()
 	}
+}
+
+// CheckForServerUpdates function checks if server updates
+func (s *TradingService) CheckForServerUpdates() {
+
 }
 
 // Calculations
@@ -190,7 +258,7 @@ func calculateProfitAndLoss(ctx context.Context, position *model.Position, curre
 	shareAmountDecimal := decimal.NewFromFloatWithExponent(position.ShareAmount, -4)
 	balanceDecimal := decimal.NewFromFloatWithExponent(balance, -2)
 
-	// calculating of PnL
+	// calculating PnL
 	currentTotalDecimal := currentSharePriceDecimal.Mul(shareAmountDecimal)
 	pnl := currentTotalDecimal.Div(totalDecimal).Mul(decimal.New(100, -2))
 	actualPnL := pnl.Sub(decimal.New(100, -2))
@@ -220,12 +288,11 @@ func calculateAmountOfShares(ctx context.Context, moneyAmount float64, sharePric
 
 // checkIfEnoughMoneyOnBalance function returns error if not enough money on balance
 func checkIfEnoughMoneyOnBalance(balance *model.Balance, moneyAmount float64) (*model.Balance, error) {
-
 	balanceDecimal := decimal.NewFromFloatWithExponent(balance.Balance, -2)
 	moneyAmountDecimal := decimal.NewFromFloatWithExponent(moneyAmount, -2)
-	ok := balanceDecimal.GreaterThanOrEqual(moneyAmountDecimal)
-	if !ok {
-		return nil, fmt.Errorf("GreaterThanOrEqual:%v", ok)
+	greater := balanceDecimal.GreaterThanOrEqual(moneyAmountDecimal)
+	if !greater {
+		return nil, fmt.Errorf("GreaterThanOrEqual:%v", greater)
 	}
 	updatedBalanceDecimal := balanceDecimal.Sub(moneyAmountDecimal)
 

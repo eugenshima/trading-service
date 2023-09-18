@@ -78,7 +78,7 @@ func (h *TradingHandler) OpenPosition(ctx context.Context, req *proto.OpenPositi
 		return nil, fmt.Errorf("OpenPosition: %w", err)
 	}
 
-	return &proto.OpenPositionResponse{ID: ID.String()}, nil
+	return &proto.OpenPositionResponse{ID: position.ID.String()}, nil
 }
 
 // ClosePosition function closes position for user

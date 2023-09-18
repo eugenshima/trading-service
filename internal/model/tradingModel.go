@@ -20,6 +20,14 @@ type Position struct {
 	TakeProfit  float64   `json:"take_profit"`
 }
 
+type OpenedPosition struct {
+	PositionID      uuid.UUID `json:"position_id"`
+	ShareOpenPrice  float64   `json:"share_open_price"`
+	ShareClosePrice float64   `json:"share_close_price"`
+	ShareAmount     float64   `json:"share_amount"`
+	IsOpened        bool      `json:"is_closed"`
+}
+
 // Share struct represents one share
 type Share struct {
 	ShareName  string  `json:"share_name"`
@@ -29,14 +37,14 @@ type Share struct {
 // PubSub struct represents a model for subscriptions(subscriber part)
 type PositionManager struct {
 	Mu              sync.RWMutex
-	OpenedPositions map[uuid.UUID]chan *Position
+	OpenedPositions map[uuid.UUID]map[uuid.UUID]*OpenedPosition
 	Closed          map[uuid.UUID]bool
 }
 
 // NewPositionManager creates a new position manager
 func NewPositionManager() *PositionManager {
 	return &PositionManager{
-		OpenedPositions: make(map[uuid.UUID]chan *Position),
+		OpenedPositions: make(map[uuid.UUID]map[uuid.UUID]*OpenedPosition),
 		Closed:          make(map[uuid.UUID]bool),
 	}
 }

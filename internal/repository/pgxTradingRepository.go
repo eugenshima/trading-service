@@ -83,7 +83,7 @@ func (repo *TradingRepository) DeletePosition(ctx context.Context, ID uuid.UUID)
 }
 
 // GetPositionByID functions returns the position of the given ID from database
-func (repo *TradingRepository) GetPositionByID(ctx context.Context, ID uuid.UUID) (*model.Position, error) {
+func (repo *TradingRepository) GetPositionByID(ctx context.Context, PositionID uuid.UUID) (*model.Position, error) {
 	tx, err := repo.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: "repeatable read"})
 	if err != nil {
 		return nil, fmt.Errorf("BeginTx: %w", err)
@@ -104,7 +104,7 @@ func (repo *TradingRepository) GetPositionByID(ctx context.Context, ID uuid.UUID
 		}
 	}()
 	position := &model.Position{}
-	err = tx.QueryRow(ctx, "SELECT id, profile_id, is_long, share_name, share_price, total, shares_amount, stop_loss, take_profit FROM trading.trading WHERE profile_id=$1", ID).Scan(&position.ID, &position.ProfileID, &position.IsLong, &position.ShareName, &position.SharePrice, &position.Total, &position.ShareAmount, &position.StopLoss, &position.TakeProfit)
+	err = tx.QueryRow(ctx, "SELECT id, profile_id, is_long, share_name, share_price, total, shares_amount, stop_loss, take_profit FROM trading.trading WHERE id=$1", PositionID).Scan(&position.ID, &position.ProfileID, &position.IsLong, &position.ShareName, &position.SharePrice, &position.Total, &position.ShareAmount, &position.StopLoss, &position.TakeProfit)
 	if err != nil {
 		return nil, fmt.Errorf("QueryRow: %w", err)
 	}

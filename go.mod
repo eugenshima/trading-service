@@ -4,10 +4,12 @@ go 1.18
 
 require (
 	github.com/caarlos0/env v3.5.0+incompatible
-	github.com/eugenshima/balance v0.0.0-20230912073624-17bc8b70d62f
+	github.com/eugenshima/balance v0.0.0-20230912135041-c9b907d1e0b0
+	github.com/eugenshima/price-service v0.0.0-20230912140934-c9edb71c404e
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v4 v4.18.1
+	github.com/lib/pq v1.10.9
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.9.3
@@ -32,7 +34,6 @@ require (
 )
 
 require (
-	github.com/eugenshima/price-service v0.0.0-20230908101030-754f55fef5d9
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect

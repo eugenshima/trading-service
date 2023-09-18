@@ -30,7 +30,12 @@ func (r *BalanceRepository) GetBalance(ctx context.Context, ID uuid.UUID) (*mode
 	if err != nil {
 		return nil, fmt.Errorf("GetUserByID: %w", err)
 	}
+	balanceID, err := uuid.Parse(response.Balance.BalanceID)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserByID: %w", err)
+	}
 	balance := &model.Balance{
+		BalanceID: balanceID,
 		ProfileID: profileID,
 		Balance:   response.Balance.Balance,
 	}
@@ -40,6 +45,7 @@ func (r *BalanceRepository) GetBalance(ctx context.Context, ID uuid.UUID) (*mode
 // UpdateBalance method updates a balance of given ID
 func (r *BalanceRepository) UpdateBalance(ctx context.Context, balance *model.Balance) error {
 	protoBalance := &proto.Balance{
+		BalanceID: balance.BalanceID.String(),
 		ProfileID: balance.ProfileID.String(),
 		Balance:   balance.Balance,
 	}

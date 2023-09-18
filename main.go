@@ -85,9 +85,10 @@ func main() {
 	positionManager := model.NewPositionManager()
 
 	srv := service.NewTradingService(rps, priceServiceRps, balanceServiceRps, positionManager)
-	handler := handlers.NewTradingHandler(srv, validator.New())
 
-	// go srv.CheckForTakeProfitAndStopLoss(context.TODO())
+	go srv.CheckForShareClosePrice(context.Background())
+
+	handler := handlers.NewTradingHandler(srv, validator.New())
 
 	lis, err := net.Listen("tcp", cfg.TradingServiceAddress)
 	if err != nil {
